@@ -1,0 +1,15 @@
+package net.treekytree.treeskin;
+
+import net.fabricmc.api.ModInitializer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Treeskin implements ModInitializer {
+	public static final String MOD_ID = "treeskin";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+	@Override
+	public void onInitialize() {
+	}
+}

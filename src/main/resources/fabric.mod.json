@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "treeskin",
+	"version": "${version}",
+	"name": "treeskin",
+	"description": "simple way to change your skin based on biome or dimension",
+	"authors": [
+		"treekytree"
+	],
+	"contact": {
+		"homepage": "https://treekytree.net/",
+		"sources": "https://github.com/treekytree/treeskin"
+	},
+	"license": "MIT",
+	"icon": "assets/treeskin/icon.png",
+	"environment": "*",
+	"entrypoints": {
+      "main": [
+        "net.treekytree.treeskin.Treeskin"
+      ],
+      "fabric-datagen": [
+        "net.treekytree.treeskin.TreeskinDataGenerator"
+      ],
+      "client": [
+        "net.treekytree.treeskin.treeskinClient"
+      ]
+	},
+	"mixins": [
+		"treeskin.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.17.2",
+		"minecraft": "~1.21.4",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
