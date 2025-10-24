@@ -54,7 +54,7 @@ public class treeskinClient implements ClientModInitializer {
 
     private void sendSkinChangeCommand(MinecraftClient client, String url) {
         if (client.getNetworkHandler() == null) return;
-        String cmd = "skin set web slim \"" + url + "\"";
+        String cmd = "skin set web classic \"" + url + "\"";
         client.getNetworkHandler().sendChatCommand(cmd);
     }
 }
