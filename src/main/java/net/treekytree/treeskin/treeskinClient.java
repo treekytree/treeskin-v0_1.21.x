@@ -10,15 +10,13 @@ import net.minecraft.world.biome.Biome;
 public class treeskinClient implements ClientModInitializer {
     private String lastState = "";
     private long lastSent = 0L;
-    private static final long COOLDOWN_MS = 3000L;
+    private final long COOLDOWN_MS = 3000L;
 
     @Override
     public void onInitializeClient() {
-        // Load config and commands
         TreeskinConfig.load();
         TreeskinCommands.register();
 
-        // Main tick event: detects environment and applies correct skin
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null || client.world == null) return;
 
@@ -29,12 +27,12 @@ public class treeskinClient implements ClientModInitializer {
                 lastState = state;
                 lastSent = now;
 
-                String url = TreeskinConfig.getSkinUrl(state);
-                if (url != null && !url.isEmpty()) {
-                    sendSkinChangeCommand(client, url);
-                    client.player.sendMessage(Text.literal("[TreeSkin] Switched skin for: " + state), false);
-                } else {
-                    client.player.sendMessage(Text.literal("[TreeSkin] No skin configured for: " + state), false);
+                String url = TreeskinConfig.getSkinUrl(state.toLowerCase().replace(" ", "_"));
+                if (url != null) {
+                    String type = TreeskinConfig.getSkinType();
+                    String cmd = "skin set web " + type + " \"" + url + "\"";
+                    client.getNetworkHandler().sendChatCommand(cmd);
+                    client.player.sendMessage(Text.literal("§a[TreeSkin] Switched skin for: " + state), true); // action bar
                 }
             }
         });
@@ -50,11 +48,5 @@ public class treeskinClient implements ClientModInitializer {
         if (temp <= 0.3f) return "overworld_cold";
         if (temp >= 0.9f) return "overworld_hot";
         return "overworld_moderate";
-    }
-
-    private void sendSkinChangeCommand(MinecraftClient client, String url) {
-        if (client.getNetworkHandler() == null) return;
-        String cmd = "skin set web classic \"" + url + "\"";
-        client.getNetworkHandler().sendChatCommand(cmd);
     }
 }
