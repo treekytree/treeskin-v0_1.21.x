@@ -2,80 +2,145 @@ package net.treekytree.treeskin;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-import net.minecraft.client.MinecraftClient;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TreeskinConfig {
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static Path configPath;
-    private static Map<String, String> skinUrls = new HashMap<>();
-    private static String skinType = "classic"; // default
+    private static final File FILE = new File("config/treeskin.json");
+
+    private static SkinType skinType = SkinType.CLASSIC;
+    private static TriggerMode triggerMode = TriggerMode.ENTER;
+    private static boolean showNotifications = true;
+    private static long stillThresholdMs = 5000;
+
+    private static final HashMap<String, String> skinUrls = new HashMap<>();
 
     public static void load() {
         try {
-            Path configDir = MinecraftClient.getInstance().runDirectory.toPath()
-                    .resolve("config")
-                    .resolve("treeskin");
-            Files.createDirectories(configDir);
-
-            configPath = configDir.resolve("config.json");
-            if (!Files.exists(configPath)) {
+            if (!FILE.exists()) {
                 save();
                 return;
             }
 
-            Type type = new TypeToken<Map<String, Object>>() {}.getType();
-            Map<String, Object> data = GSON.fromJson(new FileReader(configPath.toFile()), type);
+            FileReader reader = new FileReader(FILE);
+            SavedConfig cfg = GSON.fromJson(reader, SavedConfig.class);
+            reader.close();
 
-            if (data.containsKey("skinUrls")) {
-                Map<String, String> loadedUrls = (Map<String, String>) data.get("skinUrls");
-                skinUrls.putAll(loadedUrls);
-            }
+            if (cfg == null) return;
 
-            if (data.containsKey("skinType")) {
-                skinType = data.get("skinType").toString();
-            }
+            skinType = parseEnum(cfg.skinType, SkinType.CLASSIC);
+            triggerMode = parseEnum(cfg.triggerMode, TriggerMode.ENTER);
+            showNotifications = cfg.showNotifications;
+            stillThresholdMs = cfg.stillThresholdMs;
+
+            skinUrls.clear();
+            if (cfg.skinUrls != null) skinUrls.putAll(cfg.skinUrls);
+
         } catch (Exception e) {
-            System.err.println("[TreeSkin] Failed to load config: " + e);
+            System.err.println("[TreeSkin] Failed to load config: " + e.getMessage());
         }
     }
 
     public static void save() {
         try {
-            Map<String, Object> data = new HashMap<>();
-            data.put("skinUrls", skinUrls);
-            data.put("skinType", skinType);
-            try (FileWriter writer = new FileWriter(configPath.toFile())) {
-                GSON.toJson(data, writer);
+            SavedConfig cfg = new SavedConfig();
+            cfg.skinType = skinType.name();
+            cfg.triggerMode = triggerMode.name();
+            cfg.showNotifications = showNotifications;
+            cfg.stillThresholdMs = stillThresholdMs;
+            cfg.skinUrls = skinUrls;
+
+            File parent = FILE.getParentFile();
+            if (parent != null && !parent.exists()) {
+                boolean created = parent.mkdirs();
+                if (!created) {
+                    System.err.println("[TreeSkin] Failed to create config directory.");
+                }
             }
+
+            FileWriter writer = new FileWriter(FILE);
+            GSON.toJson(cfg, writer);
+            writer.close();
+
         } catch (Exception e) {
-            System.err.println("[TreeSkin] Failed to save config: " + e);
+            System.err.println("[TreeSkin] Failed to save config: " + e.getMessage());
         }
     }
 
-    public static void setSkinUrl(String state, String url) {
-        skinUrls.put(state, url);
-        save();
+    private static <T extends Enum<T>> T parseEnum(String value, T fallback) {
+        try {
+            return Enum.valueOf(fallback.getDeclaringClass(), value.toUpperCase());
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 
-    public static String getSkinUrl(String state) {
-        return skinUrls.get(state);
-    }
+    // Getters / setters
 
-    public static String getSkinType() {
+    public static SkinType getSkinType() {
         return skinType;
     }
 
-    public static void setSkinType(String type) {
-        skinType = type.equalsIgnoreCase("slim") ? "slim" : "classic";
-        save();
+    public static void setSkinType(SkinType type) {
+        skinType = type;
+    }
+
+    public static TriggerMode getTriggerMode() {
+        return triggerMode;
+    }
+
+    public static void setTriggerMode(TriggerMode mode) {
+        triggerMode = mode;
+    }
+
+    public static boolean getShowNotifications() {
+        return showNotifications;
+    }
+
+    public static void setShowNotifications(boolean value) {
+        showNotifications = value;
+    }
+
+    public static long getStillThresholdMs() {
+        return stillThresholdMs;
+    }
+
+    public static void setStillThresholdMs(long value) {
+        stillThresholdMs = value;
+    }
+
+    public static String getSkinUrl(String key) {
+        return skinUrls.getOrDefault(key, "");
+    }
+
+    public static void setSkinUrl(String key, String url) {
+        skinUrls.put(key, url);
+    }
+
+    public static void reset() {
+        skinType = SkinType.CLASSIC;
+        triggerMode = TriggerMode.ENTER;
+        showNotifications = true;
+        stillThresholdMs = 5000;
+        skinUrls.clear();
+    }
+
+    public static Map<String, String> getAllSkinUrls() {
+        return new HashMap<>(skinUrls);
+    }
+
+    // Internal config structure
+    private static class SavedConfig {
+        String skinType;
+        String triggerMode;
+        boolean showNotifications;
+        long stillThresholdMs;
+        HashMap<String, String> skinUrls;
     }
 }

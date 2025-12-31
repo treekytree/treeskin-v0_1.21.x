@@ -11,5 +11,6 @@ public class Treeskin implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-	}
+        LOGGER.info("TreeSkin mod initialized");
+    }
 }

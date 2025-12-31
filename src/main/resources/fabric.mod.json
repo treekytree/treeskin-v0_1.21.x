@@ -22,7 +22,10 @@
         "net.treekytree.treeskin.TreeskinDataGenerator"
       ],
       "client": [
-        "net.treekytree.treeskin.treeskinClient"
+        "net.treekytree.treeskin.TreeskinClient"
+      ],
+      "modmenu": [
+        "net.treekytree.treeskin.TreeSkinModMenu"
       ]
 	},
 	"mixins": [
